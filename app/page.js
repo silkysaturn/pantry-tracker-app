@@ -19,7 +19,7 @@ const style = {
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: 200,
-  bgcolor: 'white',
+  bgcolor: '#006d77',
   color: '#edf6f9',
   border: '2px solid #000',
   boxShadow: 24,
@@ -42,6 +42,7 @@ export default function Home() {
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
   const [search, setSearch] = useState('') 
+  const [filteredInventory, setFilteredInventory] = useState([])
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -51,6 +52,7 @@ export default function Home() {
       inventoryList.push({ name: doc.id, ...doc.data() })
     })
     setInventory(inventoryList)
+    setFilteredInventory(inventoryList)
   }
   
   useEffect(() => {
@@ -83,19 +85,19 @@ export default function Home() {
     await updateInventory()
   }
 
-  const handleOpen = () => setOpen(true)
+  const handleOpen = (query) => setOpen(true)
   const handleClose = () => setOpen(false)
 
   const handleSearchChange = (e) => {
-    console.log('Search query:', e.target.value)
     setSearch(e.target.value)
   }
 
-  const filteredInventory = inventory.filter((item) => {
-    const match = item.name.toLowerCase().includes(search.toLowerCase())
-    console.log('Item:', item.name, 'Match:', match)
-    return match
-  })
+  const handleSearch = () => {
+    const filtered = inventory.filter((item) =>
+      item.name.toLowerCase().includes(search.toLowerCase())
+    )
+    setFilteredInventory(filtered)
+  }
 
   return (
     <Box
@@ -142,15 +144,26 @@ export default function Home() {
       <Button variant="contained" onClick={handleOpen}>
         Add New Item
       </Button>
-      <TextField
-        id="search-bar"
-        label="Search"
-        variant="outlined"
-        width="75%"
-        value={search}
-        onChange={handleSearchChange}
-        sx={{ marginBottom: 2 }}
-      />      
+      <Box>
+        <TextField
+          id="search-bar"
+          label="Search"
+          variant="outlined"
+          width="75%"
+          value={search}
+          onChange={handleSearchChange}
+          sx={{ marginBottom: 2 }}
+        />
+        <Button 
+          variant='contained' 
+          onClick={handleSearch} 
+          bgcolor='#006d77'
+        
+        >
+          Search
+        </Button> 
+      </Box>
+           
       <Box border={'1px solid #333'}>
         <Box
           width="800px"
@@ -165,7 +178,7 @@ export default function Home() {
           </Typography>
         </Box>
         <Stack width="800px" height="300px" spacing={1.5} overflow={'auto'}>
-          {inventory.map(({name, quantity}) => (
+          {filteredInventory.map(({name, quantity}) => (
             <Box
               key={name}
               maxwidth="100%"
